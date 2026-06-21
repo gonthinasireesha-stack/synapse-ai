@@ -11,7 +11,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
+
 import { env } from './config/env.js';
+import cookieParser from 'cookie-parser';
+import authRoutes from './routes/authRoutes.js';
 
 export const app = express();
 
@@ -26,6 +29,7 @@ app.use(cors({
 app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
 app.use(express.json());
+app.use(cookieParser());
 
 // ---- Health check route ----
 app.get('/health', (req, res) => {
@@ -33,7 +37,7 @@ app.get('/health', (req, res) => {
 });
 
 // ---- Feature routes will be mounted here in later phases ----
-// app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes);
 // app.use('/api/documents', documentRoutes);
 
 // ---- 404 handler (must come after all real routes) ----
