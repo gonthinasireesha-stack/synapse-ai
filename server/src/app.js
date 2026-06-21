@@ -15,6 +15,7 @@ import morgan from 'morgan';
 import { env } from './config/env.js';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
 
 export const app = express();
 
@@ -38,7 +39,7 @@ app.get('/health', (req, res) => {
 
 // ---- Feature routes will be mounted here in later phases ----
 app.use('/api/auth', authRoutes);
-// app.use('/api/documents', documentRoutes);
+app.use('/api/documents', documentRoutes);
 
 // ---- 404 handler (must come after all real routes) ----
 app.use((req, res) => {
