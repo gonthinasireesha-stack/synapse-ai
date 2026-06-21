@@ -1,7 +1,9 @@
 // src/pages/DocumentList.jsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { listDocuments, deleteDocument } from '../api/documentApi.js';
+
+const POLL_INTERVAL_MS = 3000; // check every 3 seconds while something is processing
 
 export function DocumentList() {
   const [documents, setDocuments] = useState([]);
@@ -9,8 +11,16 @@ export function DocumentList() {
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  const fetchDocuments = useCallback(async () => {
-    setIsLoading(true);
+  // Tracks the interval timer ID so we can clear it on unmount or when
+  // polling is no longer needed — without this, the interval would keep
+  // firing forever, even after the user navigates away from this page,
+  // causing a real memory leak / wasted network calls.
+  const pollIntervalRef = useRef(null);
+
+  const fetchDocuments = useCallback(async (isPollingRefresh = false) => {
+    // Only show the full-page "Loading..." state on the FIRST load —
+    // a background poll refresh shouldn't visibly disrupt the UI.
+    if (!isPollingRefresh) setIsLoading(true);
     setError(null);
     try {
       const docs = await listDocuments();
@@ -18,13 +28,43 @@ export function DocumentList() {
     } catch (err) {
       setError('Failed to load documents');
     } finally {
-      setIsLoading(false);
+      if (!isPollingRefresh) setIsLoading(false);
     }
   }, []);
 
+  // Initial load on mount.
   useEffect(() => {
-    fetchDocuments();
+    fetchDocuments(false);
   }, [fetchDocuments]);
+
+  // Polling effect: runs whenever `documents` changes, checks if
+  // anything is still 'processing', and starts/stops an interval
+  // accordingly.
+  useEffect(() => {
+    const hasProcessingDocs = documents.some((doc) => doc.status === 'processing');
+
+    if (hasProcessingDocs && !pollIntervalRef.current) {
+      pollIntervalRef.current = setInterval(() => {
+        fetchDocuments(true);
+      }, POLL_INTERVAL_MS);
+    }
+
+    if (!hasProcessingDocs && pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+
+    // Cleanup: ALWAYS clear the interval when this component unmounts
+    // (e.g. user navigates to a different page) — otherwise the timer
+    // keeps running in the background indefinitely, calling
+    // fetchDocuments on a component that no longer exists.
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, [documents, fetchDocuments]);
 
   async function handleDelete(id) {
     if (!window.confirm('Delete this document? This cannot be undone.')) return;
@@ -32,9 +72,6 @@ export function DocumentList() {
     setDeletingId(id);
     try {
       await deleteDocument(id);
-      // Update local state directly instead of re-fetching the whole
-      // list — avoids an unnecessary network round-trip for something
-      // we already know the outcome of.
       setDocuments((prev) => prev.filter((doc) => doc.id !== id));
     } catch (err) {
       setError('Failed to delete document');
@@ -72,7 +109,7 @@ export function DocumentList() {
               <div>
                 <strong>{doc.title}</strong>
                 <div style={{ fontSize: '0.85rem', color: '#666' }}>
-                  Status: {doc.status} · Uploaded {new Date(doc.uploaded_at).toLocaleDateString()}
+                  Status: <StatusBadge status={doc.status} /> · Uploaded {new Date(doc.uploaded_at).toLocaleDateString()}
                 </div>
               </div>
               <button
@@ -88,4 +125,13 @@ export function DocumentList() {
       )}
     </div>
   );
+}
+
+function StatusBadge({ status }) {
+  const colors = {
+    processing: '#b8860b',
+    ready: '#2e7d32',
+    failed: '#c62828',
+  };
+  return <span style={{ color: colors[status] || '#666', fontWeight: 600 }}>{status}</span>;
 }

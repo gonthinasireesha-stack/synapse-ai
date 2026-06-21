@@ -1,28 +1,39 @@
 // src/controllers/documentController.js
 
 import * as documentService from '../services/documentService.js';
+import { ingestDocument } from '../jobs/ingestDocument.js';
+
 
 export async function upload(req, res, next) {
   try {
-    // req.user comes from requireAuth (runs before this controller).
-    // req.file comes from multer (also runs before this controller).
-    // req.body.title comes from the validate() middleware, already
-    // parsed/normalized by our Zod schema.
     const document = await documentService.uploadDocument({
       userId: req.user.id,
       file: req.file,
       customTitle: req.body.title,
     });
 
+    // Send the response IMMEDIATELY — the user gets confirmation their
+    // upload succeeded right away, without waiting for ingestion.
     res.status(201).json({
       success: true,
       data: { document },
+    });
+
+    // Trigger ingestion AFTER the response is already sent. Deliberately
+    // NOT awaited here — see the detailed explanation of what this means
+    // and its real limitations below.
+    ingestDocument(document.id, req.file.path).catch((err) => {
+      // ingestDocument already catches its own errors internally and
+      // marks the document 'failed' — this catch is a final safety net
+      // in case something TRULY unexpected escapes that (a bug in our
+      // own error handling, for instance). Logging here ensures we'd
+      // still see it, rather than a silent unhandled rejection.
+      console.error('[ingest] Unexpected error escaped ingestDocument:', err);
     });
   } catch (err) {
     next(err);
   }
 }
-
 export async function list(req, res, next) {
   try {
     const documents = await documentService.listUserDocuments(req.user.id);
