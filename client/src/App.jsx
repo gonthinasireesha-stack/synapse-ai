@@ -1,27 +1,37 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
 import { Login } from './pages/Login.jsx';
 import { Signup } from './pages/Signup.jsx';
+import { UploadDocument } from './pages/UploadDocument.jsx';
+import { DocumentList } from './pages/DocumentList.jsx';
 
-// Temporary placeholder — real Dashboard page comes in Phase 6.
-// Exists for now purely to prove protected routing + logout work end to end.
-function DashboardPlaceholder() {
+// Shared layout for everything under /dashboard — a simple nav bar plus
+// whichever nested page actually matched (rendered via <Outlet />).
+// This is a DIFFERENT use of nesting than ProtectedRoute's auth check —
+// this one is purely about shared UI (the nav), not access control.
+function DashboardLayout() {
   const { user, logout } = useAuth();
-
-  async function handleLogout() {
-    await logout();
-    // No explicit navigate() needed here — ProtectedRoute will
-    // automatically redirect to /login on the next render, since
-    // isAuthenticated becomes false the moment user state clears.
-  }
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>Dashboard</h1>
-      <p>Welcome, {user?.name}. You are authenticated — this page is protected.</p>
-      <button onClick={handleLogout}>Log out</button>
+    <div style={{ fontFamily: 'system-ui' }}>
+      <nav style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '1rem 2rem',
+        borderBottom: '1px solid #ddd',
+      }}>
+        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          <strong>Synapse AI</strong>
+          <Link to="/dashboard/documents">Documents</Link>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <span style={{ color: '#666' }}>{user?.name}</span>
+          <button onClick={logout}>Log out</button>
+        </div>
+      </nav>
+      <Outlet />
     </div>
   );
 }
@@ -34,13 +44,18 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Everything nested inside this route requires authentication */}
+          {/* ProtectedRoute checks auth; DashboardLayout provides shared
+              nav UI for everything inside. Two levels of nesting, two
+              different responsibilities. */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/dashboard" element={<DashboardPlaceholder />} />
+            <Route element={<DashboardLayout />}>
+              <Route path="/dashboard/documents" element={<DocumentList />} />
+              <Route path="/dashboard/upload" element={<UploadDocument />} />
+              {/* /dashboard itself redirects to the documents list */}
+              <Route path="/dashboard" element={<Navigate to="/dashboard/documents" replace />} />
+            </Route>
           </Route>
 
-          {/* Root path always redirects to /dashboard, which itself
-              redirects to /login if the user isn't authenticated */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </AuthProvider>
