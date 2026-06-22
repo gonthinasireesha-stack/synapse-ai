@@ -17,6 +17,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import notesQuizRoutes from './routes/notesQuizRoutes.js';
 
 export const app = express();
 
@@ -42,6 +43,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api', chatRoutes);
+app.use('/api', notesQuizRoutes);
 // ---- 404 handler (must come after all real routes) ----
 app.use((req, res) => {
   res.status(404).json({

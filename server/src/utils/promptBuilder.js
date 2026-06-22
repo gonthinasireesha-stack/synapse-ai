@@ -28,3 +28,57 @@ ${question}
 
 ANSWER:`;
 }
+
+// Add to existing promptBuilder.js
+
+export function buildNotesPrompt(retrievedChunks) {
+  const context = retrievedChunks
+    .map((chunk, i) => `[Excerpt ${i + 1}]\n${chunk.chunk_text}`)
+    .join('\n\n');
+
+  return `You are a study assistant helping students learn from their documents.
+Based on the following document excerpts, create clear, concise study notes.
+
+FORMAT YOUR RESPONSE AS:
+- Use markdown formatting
+- Start with a "## Key Concepts" section
+- Follow with "## Important Details"
+- End with "## Summary"
+- Use bullet points for clarity
+- Be concise but comprehensive
+- Only include information from the provided excerpts
+
+DOCUMENT EXCERPTS:
+${context}
+
+Generate the study notes now:`;
+}
+
+export function buildQuizPrompt(retrievedChunks, questionCount = 5) {
+  const context = retrievedChunks
+    .map((chunk, i) => `[Excerpt ${i + 1}]\n${chunk.chunk_text}`)
+    .join('\n\n');
+
+  return `You are a quiz generator. Based on the document excerpts below, generate exactly ${questionCount} multiple choice questions.
+
+CRITICAL RULES:
+- Return ONLY a valid JSON array. No explanation, no markdown, no backticks, no preamble.
+- Each question must have exactly 4 options labeled A, B, C, D
+- Only one option should be correct
+- Base questions ONLY on the provided excerpts
+- Make questions test genuine understanding, not trivial recall
+
+REQUIRED JSON FORMAT (return exactly this structure):
+[
+  {
+    "question_text": "What is...?",
+    "options": {"A": "...", "B": "...", "C": "...", "D": "..."},
+    "correct_option": "A"
+  }
+]
+
+DOCUMENT EXCERPTS:
+${context}
+
+JSON ARRAY:`;
+}
