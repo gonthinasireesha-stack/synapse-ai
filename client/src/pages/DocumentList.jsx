@@ -119,6 +119,17 @@ export function DocumentList() {
               >
                 {deletingId === doc.id ? 'Deleting...' : 'Delete'}
               </button>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+  <Link to={`/dashboard/documents/${doc.id}/notes`}>Notes</Link>
+  <Link to={`/dashboard/documents/${doc.id}/quizzes`}>Quiz</Link>
+  <button
+    onClick={() => handleDelete(doc.id)}
+    disabled={deletingId === doc.id}
+    style={{ color: 'crimson' }}
+  >
+    {deletingId === doc.id ? 'Deleting...' : 'Delete'}
+  </button>
+</div>
             </li>
           ))}
         </ul>

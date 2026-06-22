@@ -6,6 +6,8 @@ import { Login } from './pages/Login.jsx';
 import { Signup } from './pages/Signup.jsx';
 import { UploadDocument } from './pages/UploadDocument.jsx';
 import { DocumentList } from './pages/DocumentList.jsx';
+import { Notes } from './pages/Notes.jsx';
+import { QuizList, QuizTaker } from './pages/Quiz.jsx';
 
 // Shared layout for everything under /dashboard — a simple nav bar plus
 // whichever nested page actually matched (rendered via <Outlet />).
@@ -48,11 +50,16 @@ function App() {
               nav UI for everything inside. Two levels of nesting, two
               different responsibilities. */}
           <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout />}>
+            <Route element={<DashboardLayout />}
+            >
               <Route path="/dashboard/documents" element={<DocumentList />} />
               <Route path="/dashboard/upload" element={<UploadDocument />} />
               {/* /dashboard itself redirects to the documents list */}
               <Route path="/dashboard" element={<Navigate to="/dashboard/documents" replace />} />
+
+              <Route path="/dashboard/documents/:documentId/notes" element={<Notes />} />
+<Route path="/dashboard/documents/:documentId/quizzes" element={<QuizList />} />
+<Route path="/dashboard/quiz/:quizId" element={<QuizTaker />} />
             </Route>
           </Route>
 
