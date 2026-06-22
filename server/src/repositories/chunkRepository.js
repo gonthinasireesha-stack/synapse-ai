@@ -46,3 +46,26 @@ export async function countChunksByDocumentId(documentId) {
   );
   return Number(result.rows[0].count);
 }
+
+// Add this function to the existing chunkRepository.js
+
+// Finds the K chunks most semantically similar to a query embedding,
+// scoped to ONE document and verified to belong to the requesting user
+// (via a JOIN against documents — same ownership-check principle as
+// documentRepository's WHERE user_id clause from Phase 2).
+export async function findSimilarChunks(documentId, userId, queryEmbedding, topK = 5) {
+  const vectorLiteral = `[${queryEmbedding.join(',')}]`;
+
+  const result = await pool.query(
+    `SELECT dc.id, dc.chunk_text, dc.chunk_index, dc.page_number,
+            dc.embedding <=> $1 AS distance
+     FROM document_chunks dc
+     JOIN documents d ON d.id = dc.document_id
+     WHERE dc.document_id = $2 AND d.user_id = $3
+     ORDER BY dc.embedding <=> $1
+     LIMIT $4`,
+    [vectorLiteral, documentId, userId, topK]
+  );
+
+  return result.rows;
+}
