@@ -8,7 +8,11 @@
 // server, and reusable if we ever add another entry point (e.g. a CLI,
 // or a mobile-specific endpoint) without duplicating business rules.
 
-import { findUserByEmail, createUser } from '../repositories/userRepository.js';
+import {
+  findUserByEmail,
+  createUser,
+  findUserById,
+} from '../repositories/userRepository.js';
 import {
   storeRefreshToken,
   findActiveRefreshToken,
@@ -103,28 +107,69 @@ export async function login({ email, password }) {
 // Exchanges a valid, unexpired, non-revoked refresh token for a new
 // access token. Does NOT issue a new refresh token here (kept simple
 // for now — token rotation is a production enhancement we'll discuss).
-export async function refreshAccessToken(refreshToken) {
+export async function refreshAccessToken(
+  refreshToken
+) {
+
   let payload;
+
   try {
-    payload = verifyRefreshToken(refreshToken);
+
+    payload =
+      verifyRefreshToken(
+        refreshToken
+      );
+
   } catch {
-    throw new AuthError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN', 401);
+
+    throw new AuthError(
+      'Invalid or expired refresh token',
+      'INVALID_REFRESH_TOKEN',
+      401
+    );
   }
 
-  const tokenHash = hashToken(refreshToken);
-  const storedToken = await findActiveRefreshToken(tokenHash);
+  const tokenHash =
+    hashToken(refreshToken);
 
-  // This check matters even though we already verified the JWT signature:
-  // the signature being valid only proves WE issued it at some point.
-  // The DB check confirms it hasn't been revoked (logout) since then.
+  const storedToken =
+    await findActiveRefreshToken(
+      tokenHash
+    );
+
   if (!storedToken) {
-    throw new AuthError('Refresh token has been revoked or expired', 'INVALID_REFRESH_TOKEN', 401);
+
+    throw new AuthError(
+      'Refresh token has been revoked or expired',
+      'INVALID_REFRESH_TOKEN',
+      401
+    );
   }
 
-  const newAccessToken = signAccessToken({ id: payload.sub, email: payload.email });
-  return { accessToken: newAccessToken };
-}
+  // Fetch FULL user data from DB
+  const user =
+    await findUserById(
+      payload.sub
+    );
 
+  if (!user) {
+
+    throw new AuthError(
+      'User not found',
+      'USER_NOT_FOUND',
+      404
+    );
+  }
+
+  // Create a complete access token
+  const newAccessToken =
+    signAccessToken(user);
+
+  return {
+    accessToken:
+      newAccessToken,
+  };
+}
 // ===================== LOGOUT =====================
 export async function logout(refreshToken) {
   if (!refreshToken) return; // nothing to revoke, treat as a no-op success

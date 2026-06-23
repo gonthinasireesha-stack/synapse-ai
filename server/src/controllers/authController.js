@@ -105,7 +105,8 @@ export async function me(req, res, next) {
   try {
     // req.user is attached by authMiddleware (next file) after verifying
     // the access token — by the time we're here, we already know who's
-    // asking.
+    
+
     res.status(200).json({
       success: true,
       data: { user: req.user },

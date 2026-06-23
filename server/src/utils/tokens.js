@@ -11,10 +11,23 @@ import { env } from '../config/env.js';
 // ACCESS TOKEN — short-lived, sent with every API request.
 // Payload is intentionally minimal: just enough to identify the user.
 export function signAccessToken(user) {
+
   return jwt.sign(
-    { sub: user.id, email: user.email }, // 'sub' = subject, the JWT standard claim for "who this token is about"
+
+    {
+      sub: user.id,
+
+      name: user.name,
+
+      email: user.email,
+    },
+
     env.jwt.accessSecret,
-    { expiresIn: env.jwt.accessExpiry }
+
+    {
+      expiresIn:
+        env.jwt.accessExpiry,
+    }
   );
 }
 
