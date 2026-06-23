@@ -3,24 +3,31 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { generateNotes, listNotes } from '../api/notesQuizApi.js';
 
-// Simple markdown renderer — converts our structured notes markdown
-// to readable HTML without needing a full markdown library.
-// Handles: ## headers, **bold**, bullet points, and line breaks.
 function SimpleMarkdown({ content }) {
   const lines = content.split('\n');
   return (
-    <div style={{ lineHeight: 1.7 }}>
+    <div style={{ lineHeight: 1.8, color: 'var(--text-primary)' }}>
       {lines.map((line, i) => {
         if (line.startsWith('## ')) {
-          return <h2 key={i} style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>{line.slice(3)}</h2>;
+          return (
+            <h2 key={i} style={{ marginTop: '1.8rem', marginBottom: '1rem', fontSize: '1.4rem', fontWeight: 700, color: 'var(--accent)' }}>
+              {line.slice(3)}
+            </h2>
+          );
         }
         if (line.startsWith('* ') || line.startsWith('- ')) {
-          const text = line.slice(2).replace(/\*\*(.*?)\*\*/g, '$1');
-          return <li key={i} style={{ marginBottom: '0.25rem' }}>{text}</li>;
+          return (
+            <li key={i} style={{ marginBottom: '0.6rem', color: 'var(--text-primary)' }}>
+              {line.slice(2).replace(/\*\*(.*?)\*\*/g, '$1')}
+            </li>
+          );
         }
         if (line.trim() === '') return <br key={i} />;
-        const text = line.replace(/\*\*(.*?)\*\*/g, '$1');
-        return <p key={i} style={{ margin: '0.25rem 0' }}>{text}</p>;
+        return (
+          <p key={i} style={{ margin: '0.6rem 0', color: 'var(--text-primary)' }}>
+            {line.replace(/\*\*(.*?)\*\*/g, '$1')}
+          </p>
+        );
       })}
     </div>
   );
@@ -65,44 +72,102 @@ export function Notes() {
 
   const activeNote = notes.find((n) => n.id === activeNoteId);
 
-  if (isLoading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (isLoading) {
+    return <div style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>Loading...</div>;
+  }
 
   return (
-    <div style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem', fontFamily: 'system-ui' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1>Study Notes</h1>
-        <button onClick={handleGenerate} disabled={isGenerating}>
-          {isGenerating ? 'Generating... (this may take 10-20s)' : '+ Generate Notes'}
+    <div style={{ maxWidth: 1250, margin: '2rem auto', padding: '0 2rem' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '2.3rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+            Study Notes
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>
+            Generate structured notes from your PDF
+          </p>
+        </div>
+        <button
+          onClick={handleGenerate}
+          disabled={isGenerating}
+          style={{
+            border: 'none', borderRadius: 14, padding: '14px 22px',
+            background: 'var(--accent)', color: 'var(--bg-primary)',
+            fontWeight: 700, fontSize: '.95rem', cursor: 'pointer',
+            opacity: isGenerating ? 0.7 : 1,
+          }}
+        >
+          {isGenerating ? 'Generating...' : '+ Generate Notes'}
         </button>
       </div>
 
-      {error && <p style={{ color: 'crimson' }}>{error}</p>}
+      {/* Error */}
+      {error && (
+        <div style={{
+          padding: '14px', borderRadius: 12, marginBottom: '1rem',
+          border: '1px solid var(--danger)', background: 'rgba(196,112,112,0.1)',
+          color: 'var(--danger)',
+        }}>
+          {error}
+        </div>
+      )}
 
+      {/* Empty State */}
       {notes.length === 0 ? (
-        <p style={{ color: '#666' }}>No notes yet. Generate your first set of notes above.</p>
+        <div style={{
+          background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+          borderRadius: 24, padding: '5rem', textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
+          <h2 style={{ color: 'var(--text-primary)' }}>No notes yet</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Generate your first notes above.</p>
+        </div>
       ) : (
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <div style={{ width: 200, flexShrink: 0 }}>
-            <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem' }}>Previous notes:</p>
+        <div style={{
+          display: 'flex', gap: '1.25rem',
+          background: 'var(--bg-secondary)', border: '1px solid var(--border)',
+          borderRadius: 24, padding: '2rem',
+          boxShadow: '0 0 35px var(--accent-glow)',
+        }}>
+          {/* Previous Notes list */}
+          <div style={{ width: 180, minWidth: 180, flexShrink: 0 }}>
+            <p style={{ color: 'var(--text-secondary)', fontWeight: 600, fontSize: '.9rem', marginBottom: '1rem' }}>
+              Previous Notes
+            </p>
             {notes.map((note) => (
               <button
                 key={note.id}
                 onClick={() => setActiveNoteId(note.id)}
                 style={{
                   display: 'block', width: '100%', textAlign: 'left',
-                  padding: '0.5rem', marginBottom: '0.25rem',
-                  background: note.id === activeNoteId ? '#e8f4fd' : 'transparent',
-                  border: '1px solid #ddd', borderRadius: 4, cursor: 'pointer',
-                  fontSize: '0.8rem',
+                  padding: '12px', marginBottom: '10px', borderRadius: 14,
+                  cursor: 'pointer', color: 'var(--text-primary)',
+                  background: note.id === activeNoteId ? 'var(--accent-glow)' : 'transparent',
+                  border: note.id === activeNoteId ? '1px solid var(--accent)' : '1px solid var(--border)',
+                  transition: 'all 0.15s',
                 }}
               >
-                {new Date(note.created_at).toLocaleDateString()}
+                <div style={{ fontWeight: 600, fontSize: '.9rem' }}>
+                  {new Date(note.created_at).toLocaleDateString()}
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: '.72rem', marginTop: 4 }}>
+                  {new Date(note.created_at).toLocaleTimeString()}
+                </div>
               </button>
             ))}
           </div>
 
-          <div style={{ flex: 1, borderLeft: '1px solid #ddd', paddingLeft: '1rem' }}>
-            {activeNote && <SimpleMarkdown content={activeNote.content} />}
+          {/* Note Content */}
+          <div style={{
+            flexGrow: 1, minWidth: 0,
+            background: 'var(--bg-tertiary)', border: '1px solid var(--border)',
+            borderRadius: 20, padding: '2rem', overflowY: 'auto',
+          }}>
+            {activeNote
+              ? <SimpleMarkdown content={activeNote.content} />
+              : <p style={{ color: 'var(--text-secondary)' }}>Select a note to read it</p>
+            }
           </div>
         </div>
       )}

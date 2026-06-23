@@ -6,4 +6,125 @@
 body {
   margin: 0;
   min-height: 100vh;
+}/* ============================================
+   SYNAPSE AI — Design Token System
+   Brand: dark neural-network aesthetic,
+   muted rose-pink accent extracted from logo
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ---------- Dark theme (default) ---------- */
+:root {
+  --bg-primary:    #1a1418;
+  --bg-secondary:  #2d2428;
+  --bg-tertiary:   #3d3035;
+  --bg-hover:      #4a3a3e;
+  --accent:        #c4848a;
+  --accent-soft:   #e8d0d2;
+  --accent-glow:   rgba(196, 132, 138, 0.15);
+  --text-primary:  #f0e8ea;
+  --text-secondary:#9d8589;
+  --border:        #4a3a3e;
+  --success:       #7eb89a;
+  --warning:       #d4a56a;
+  --danger:        #c47070;
+  --sidebar-width: 240px;
+  --sidebar-collapsed: 64px;
+  --radius:        8px;
+  --radius-lg:     16px;
+  --shadow:        0 4px 24px rgba(0,0,0,0.4);
+  color-scheme: dark;
+}
+
+/* ---------- Light theme ---------- */
+[data-theme="light"] {
+  --bg-primary:    #faf5f6;
+  --bg-secondary:  #f0e8ea;
+  --bg-tertiary:   #e8d8db;
+  --bg-hover:      #ddc8cc;
+  --accent:        #a85f66;
+  --accent-soft:   #2d2428;
+  --accent-glow:   rgba(168, 95, 102, 0.1);
+  --text-primary:  #2d2428;
+  --text-secondary:#6b4f54;
+  --border:        #d4bfc2;
+  --shadow:        0 4px 24px rgba(45,36,40,0.12);
+  color-scheme: light;
+}
+
+/* ---------- System preference ---------- */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg-primary:    #faf5f6;
+    --bg-secondary:  #f0e8ea;
+    --bg-tertiary:   #e8d8db;
+    --bg-hover:      #ddc8cc;
+    --accent:        #a85f66;
+    --accent-soft:   #2d2428;
+    --accent-glow:   rgba(168, 95, 102, 0.1);
+    --text-primary:  #2d2428;
+    --text-secondary:#6b4f54;
+    --border:        #d4bfc2;
+    --shadow:        0 4px 24px rgba(45,36,40,0.12);
+    color-scheme: light;
+  }
+}
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { color: var(--accent-soft); }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.15s;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+/* ---------- Utility classes ---------- */
+.mono { font-family: 'JetBrains Mono', monospace; }
+.text-accent { color: var(--accent); }
+.text-secondary { color: var(--text-secondary); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-warning { color: var(--warning); }
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

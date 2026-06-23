@@ -30,3 +30,34 @@ export async function submitAttempt(quizId, answers) {
   const response = await api.post(`/quizzes/${quizId}/attempts`, { answers });
   return response.data.data.attempt;
 }
+
+// Add to existing notesQuizApi.js
+
+export async function listAllNotes() {
+  // We'll fetch all documents first, then notes per document
+  const { api } = await import('./axiosInstance.js');
+  const docsRes = await api.get('/documents');
+  const docs = docsRes.data.data.documents.filter(d => d.status === 'ready');
+  
+  const allNotes = [];
+  for (const doc of docs) {
+    const notesRes = await api.get(`/documents/${doc.id}/notes`);
+    const notes = notesRes.data.data.notes;
+    notes.forEach(n => allNotes.push({ ...n, documentTitle: doc.title, documentId: doc.id }));
+  }
+  return allNotes;
+}
+
+export async function listAllQuizzes() {
+  const { api } = await import('./axiosInstance.js');
+  const docsRes = await api.get('/documents');
+  const docs = docsRes.data.data.documents.filter(d => d.status === 'ready');
+  
+  const allQuizzes = [];
+  for (const doc of docs) {
+    const quizzesRes = await api.get(`/documents/${doc.id}/quizzes`);
+    const quizzes = quizzesRes.data.data.quizzes;
+    quizzes.forEach(q => allQuizzes.push({ ...q, documentTitle: doc.title, documentId: doc.id }));
+  }
+  return allQuizzes;
+}

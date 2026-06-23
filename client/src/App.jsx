@@ -1,71 +1,73 @@
 // src/App.jsx
-import { BrowserRouter, Routes, Route, Navigate, Link, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 import { ProtectedRoute } from './routes/ProtectedRoute.jsx';
+import { Sidebar } from './components/Sidebar.jsx';
+import { Landing } from './pages/Landing.jsx';
 import { Login } from './pages/Login.jsx';
 import { Signup } from './pages/Signup.jsx';
+import { Dashboard } from './pages/Dashboard.jsx';
 import { UploadDocument } from './pages/UploadDocument.jsx';
 import { DocumentList } from './pages/DocumentList.jsx';
 import { Notes } from './pages/Notes.jsx';
 import { QuizList, QuizTaker } from './pages/Quiz.jsx';
+import { Chat } from './pages/Chat.jsx';
+// Add imports
+import { AllNotes } from './pages/AllNotes.jsx';
+import { AllQuizzes } from './pages/AllQuizzes.jsx';
 
-// Shared layout for everything under /dashboard — a simple nav bar plus
-// whichever nested page actually matched (rendered via <Outlet />).
-// This is a DIFFERENT use of nesting than ProtectedRoute's auth check —
-// this one is purely about shared UI (the nav), not access control.
-function DashboardLayout() {
-  const { user, logout } = useAuth();
+function AppShell() {
   return (
-    <div style={{ fontFamily: 'system-ui' }}>
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '1rem 2rem',
-        borderBottom: '1px solid #ddd',
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <Sidebar />
+      <main style={{
+        marginLeft: 'var(--sidebar-width)',
+        flex: 1, minHeight: '100vh',
+        background: 'var(--bg-primary)',
+        transition: 'margin-left 0.2s ease',
       }}>
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-          <strong>Synapse AI</strong>
-          <Link to="/dashboard/documents">Documents</Link>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <span style={{ color: '#666' }}>{user?.name}</span>
-          <button onClick={logout}>Log out</button>
-        </div>
-      </nav>
-      <Outlet />
+        <Outlet />
+      </main>
     </div>
   );
+}
+
+function RootRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return null;
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <Landing />;
 }
 
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<RootRoute />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* ProtectedRoute checks auth; DashboardLayout provides shared
-              nav UI for everything inside. Two levels of nesting, two
-              different responsibilities. */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<DashboardLayout />}
-            >
-              <Route path="/dashboard/documents" element={<DocumentList />} />
-              <Route path="/dashboard/upload" element={<UploadDocument />} />
-              {/* /dashboard itself redirects to the documents list */}
-              <Route path="/dashboard" element={<Navigate to="/dashboard/documents" replace />} />
-
-              <Route path="/dashboard/documents/:documentId/notes" element={<Notes />} />
-<Route path="/dashboard/documents/:documentId/quizzes" element={<QuizList />} />
-<Route path="/dashboard/quiz/:quizId" element={<QuizTaker />} />
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppShell />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/documents" element={<DocumentList />} />
+                <Route path="/dashboard/upload" element={<UploadDocument />} />
+                <Route path="/dashboard/documents/:documentId/notes" element={<Notes />} />
+                <Route path="/dashboard/documents/:documentId/quizzes" element={<QuizList />} />
+                <Route path="/dashboard/documents/:documentId/chat" element={<Chat />} />
+                <Route path="/dashboard/quiz/:quizId" element={<QuizTaker />} />
+              </Route>
+              <Route path="/dashboard/notes" element={<AllNotes />} />
+<Route path="/dashboard/quizzes" element={<AllQuizzes />} />
+<Route path="/dashboard/chat" element={<DocumentList />} />
             </Route>
-          </Route>
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </AuthProvider>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }
