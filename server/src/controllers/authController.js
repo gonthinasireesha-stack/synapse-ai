@@ -19,15 +19,13 @@ function refreshCookieOptions() {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     path: '/api/auth',
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 }
 
 function clearRefreshCookieOptions() {
-  // Same as refreshCookieOptions but WITHOUT maxAge — Express 5 will
-  // auto-expire the cookie immediately; passing maxAge here is deprecated.
   const { maxAge, ...rest } = refreshCookieOptions();
   return rest;
 }
