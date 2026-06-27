@@ -26,14 +26,11 @@ app.use(helmet());
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-
     const allowedOrigins = [
       'http://localhost:5173',
-      'https://synapse-ai-61mu-9os4peykl-sireesha2454s-projects.vercel.app',
+      process.env.CLIENT_URL,
     ].filter(Boolean);
-
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
