@@ -31,7 +31,7 @@ app.use(cors({
 
     const allowedOrigins = [
       'http://localhost:5173',
-      process.env.CLIENT_URL,
+      'https://synapse-ai-61mu-9os4peykl-sireesha2454s-projects.vercel.app',
     ].filter(Boolean);
 
     if (allowedOrigins.includes(origin)) {
